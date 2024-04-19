@@ -1,3 +1,4 @@
 # Adding sensor data to PINN networks
 
-Sensor data is transmitted to the model with socket programming.
+This project is being conducted as part of the undergraduate thesis, focusing on extracting the digital twin of a mass-spring model using TensorFlow to design a
+PINN (Physics-Informed Neural Network), and utilizing socket connections through sensors.
