@@ -1,9 +1,9 @@
 import socket
-import manual_tensorflow
+import pytorch_PINN
 import pickle
 
 HOST = "127.0.0.1"  # Standard loopback interface address (localhost)
-PORT = 65432  # Port to listen on (non-privileged ports are > 1023)
+PORT = 12000  # Port to listen on (non-privileged ports are > 1023)
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.bind((HOST, PORT))
@@ -13,7 +13,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         print(f"Connected by {addr}")
         while True:
             data = conn.recv(1024)
-            manual_tensorflow.main(pickle.loads(data))
-
+            pytorch_PINN.main(pickle.loads(data))
             if not data:
                 break

@@ -57,32 +57,23 @@ def main(sensor_x_data):
     # set random seed for reproducibility
     torch.manual_seed(123)
 
-
     # define a neural network to train
-    # TODO: write code here
     pinn = FCN(1,1,32,3)
 
     # define boundary points, for the boundary loss
-    # TODO: write code here
     t_boundary = torch.tensor(0.).view(-1,1).requires_grad_(True)
 
     # define training points over the entire domain, for the physics loss
-    # TODO: write code here
     t_physics = torch.linspace(0,1,30).view(-1,1).requires_grad_(True)
 
-    # train the PINN
-    ##d, w0 = 2, 20
-    ##mu, k = 2*d, w0**2
     t_test = torch.linspace(0,1,300).view(-1,1)
-    ##u_exact = exact_solution(d, w0, t_test)
     u_exact = exact_solution(t_test)
+
     optimiser = torch.optim.Adam(pinn.parameters(),lr=1e-3)
-
-
+    
     sensor_data = torch.tensor(sensor_x_data).unsqueeze(1)
-    #sensor_data = torch.tensor(sensor_x_data).view(-1,1).requires_grad_(True)
 
-    for i in range(50000):
+    for i in range(len(sensor_x_data)*4166):
         optimiser.zero_grad()
 
         # compute each term of the PINN loss function above
@@ -113,11 +104,11 @@ def main(sensor_x_data):
         loss.backward()
         optimiser.step()
 
-        if i % 1000 == 0:
+        if i % 10000 == 0:
             print(f"Step {i}, Loss {loss.item()}")
 
                 # plot the result as training progresses
-        if i % 1000 == 0 and i > 0:
+        if i % 10000 == 0 and i > 0:
 
             #print(u.abs().mean().item(), dudt.abs().mean().item(), d2udt2.abs().mean().item())
             u = pinn(t_test).detach()
@@ -132,3 +123,4 @@ def main(sensor_x_data):
             plt.legend()
             plt.show()
             
+    return 
