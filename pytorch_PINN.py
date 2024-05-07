@@ -20,6 +20,7 @@ def exact_solution(t):
     u=x0*np.cos(w*t)
     return u
 
+
 """
 def exact_solution(d, w0, t):
     "Defines the analytical solution to the under-damped harmonic oscillator problem above."
@@ -55,6 +56,9 @@ class FCN(nn.Module):
 
 def main(sensor_x_data):
     # set random seed for reproducibility
+    print("Pytorch PINN çalıştırıldı")
+    print(sensor_x_data,len(sensor_x_data),type(sensor_x_data))
+    print('tahmini epoch: ',(len(sensor_x_data)*1000))
     torch.manual_seed(123)
 
     # define a neural network to train
@@ -64,16 +68,16 @@ def main(sensor_x_data):
     t_boundary = torch.tensor(0.).view(-1,1).requires_grad_(True)
 
     # define training points over the entire domain, for the physics loss
-    t_physics = torch.linspace(0,1,30).view(-1,1).requires_grad_(True)
+    t_physics = torch.linspace(0,len(sensor_x_data),30).view(-1,1).requires_grad_(True)
 
-    t_test = torch.linspace(0,1,300).view(-1,1)
+    t_test = torch.linspace(0,len(sensor_x_data),300).view(-1,1)
     u_exact = exact_solution(t_test)
 
     optimiser = torch.optim.Adam(pinn.parameters(),lr=1e-3)
     
     sensor_data = torch.tensor(sensor_x_data).unsqueeze(1)
 
-    for i in range(len(sensor_x_data)*4166):
+    for i in range(len(sensor_x_data)*1000):
         optimiser.zero_grad()
 
         # compute each term of the PINN loss function above
@@ -94,9 +98,12 @@ def main(sensor_x_data):
 
 
 
-        # Sensör verileri için kayıp hesaplayın
-        u_predicted = pinn(sensor_data)
-        loss_sensor = torch.mean((u_predicted - sensor_data)**2)  # MSE kullanılarak hesaplama
+        # Sensör verileri için kayıp hesaplanmasi
+        #sensör verileri için bir kayıp hesaplanıyor ve ardından bu kayıp, modelin sensör verilerini doğru bir şekilde öğrenip öğrenmediğini belirlemek için kullanılıyor.
+        # Kayıp hesaplanırken, tahmin edilen sensör verileri (u) ile gerçek sensör verileri (sensor_data) arasındaki ortalama kare hatası hesaplanıyor.
+        # Eğer kayıp düşükse, bu, modelin sensör verilerini doğru bir şekilde öğrendiğini gösterebilir.
+        u = pinn(sensor_data)
+        loss_sensor = torch.mean((u - sensor_data)**2)  # MSE kullanılarak hesaplama
 
         # backpropagate joint loss, take optimiser step
         loss = loss1 + lambda1*loss2 + lambda2*loss3 + lambda3*loss_sensor
@@ -104,11 +111,11 @@ def main(sensor_x_data):
         loss.backward()
         optimiser.step()
 
-        if i % 10000 == 0:
+        if i % 1000 == 0:
             print(f"Step {i}, Loss {loss.item()}")
 
                 # plot the result as training progresses
-        if i % 10000 == 0 and i > 0:
+        if i % 5000 == 0 and i > 0 or i == len(sensor_x_data)*1000-1:
 
             #print(u.abs().mean().item(), dudt.abs().mean().item(), d2udt2.abs().mean().item())
             u = pinn(t_test).detach()
@@ -124,3 +131,10 @@ def main(sensor_x_data):
             plt.show()
             
     return 
+
+
+
+#07.05.2924
+# Egitim zamani egitim datasinda nasil degisecek ?
+
+# yay durmuyor bizim modelimizde.
