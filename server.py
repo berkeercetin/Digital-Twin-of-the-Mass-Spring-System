@@ -100,15 +100,15 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             t_boundary = torch.tensor(0.).view(-1,1).requires_grad_(True)
 
             # define training points over the entire domain, for the physics loss
-            t_physics = torch.linspace(0,len(datam),30).view(-1,1).requires_grad_(True)
+            t_physics = torch.linspace(0,len(datam),len(datam)*30).view(-1,1).requires_grad_(True)
 
-            t_test = torch.linspace(0,len(datam),300).view(-1,1)
+            t_test = torch.linspace(0,len(datam),len(datam)*300).view(-1,1)
             u_exact = exact_solution(d, w0, t_test)
             optimiser = torch.optim.Adam(pinn.parameters(),lr=1e-3)
             
             sensor_data = torch.tensor(datam).unsqueeze(1)
 
-            for i in range(len(datam)*1000):
+            for i in range(len(datam)*10000):
                 optimiser.zero_grad()
 
                 # compute each term of the PINN loss function above
@@ -137,6 +137,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 loss_sensor = torch.mean((u - sensor_data)**2)  # MSE kullanılarak hesaplama
 
                 # backpropagate joint loss, take optimiser step
+                
                 loss = loss1 + lambda1*loss2 + lambda2*loss3 + lambda3*loss_sensor
                 #loss = loss1 + lambda1*loss2 + lambda2*loss3
                 loss.backward()
