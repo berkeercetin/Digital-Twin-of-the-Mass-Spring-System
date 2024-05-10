@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import matplotlib.pyplot as plt
-
+import time
 if torch.cuda.is_available():
   dev = "cuda:0"
 else:
@@ -53,31 +53,18 @@ class FCN(nn.Module):
         x = self.fch(x)
         x = self.fce(x)
         return x
-
-def main(sensor_x_data):
-    # set random seed for reproducibility
-    print("Pytorch PINN çalıştırıldı")
-    print(sensor_x_data,len(sensor_x_data),type(sensor_x_data))
-    print('tahmini epoch: ',(len(sensor_x_data)*1000))
-    torch.manual_seed(123)
-
-    # define a neural network to train
-    pinn = FCN(1,1,32,3)
-
-    # define boundary points, for the boundary loss
-    t_boundary = torch.tensor(0.).view(-1,1).requires_grad_(True)
-
-    # define training points over the entire domain, for the physics loss
-    t_physics = torch.linspace(0,len(sensor_x_data),30).view(-1,1).requires_grad_(True)
-
-    t_test = torch.linspace(0,len(sensor_x_data),300).view(-1,1)
-    u_exact = exact_solution(t_test)
-
-    optimiser = torch.optim.Adam(pinn.parameters(),lr=1e-3)
     
-    sensor_data = torch.tensor(sensor_x_data).unsqueeze(1)
+torch.manual_seed(123)
+pinn = FCN(1,1,32,3)
+t_boundary = torch.tensor(0.).view(-1,1).requires_grad_(True)
+optimiser = torch.optim.Adam(pinn.parameters(),lr=1e-3)
 
-    for i in range(len(sensor_x_data)*1000):
+def main(sensor_x_data,timeSecond):
+    i = 0
+    while True:
+        t_physics = torch.linspace(0,time.time()-timeSecond,30).view(-1,1).requires_grad_(True)
+        t_test = torch.linspace(0,time.time()-timeSecond,300).view(-1,1)
+        u_exact = exact_solution(t_test)
         optimiser.zero_grad()
 
         # compute each term of the PINN loss function above
