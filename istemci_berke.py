@@ -6,7 +6,7 @@ import RPi.GPIO as GPIO
 import math
 import numpy as np
 import pickle
-HOST = "192.168.137.1" #pc ip adresi
+HOST = "10.42.0.1" #pc ip adresi
 #HOST = "127.0.0.1"
 PORT = 12000
 
@@ -45,30 +45,34 @@ def distance_calculate(distance): #Ã–lÃ§Ã¼len mesafeyi alÄ±r ve bu mesa
     return mesafe
 
 
-
+previous_distance = None
+yay_yukseklik = 0.10
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.connect((HOST, PORT))
-
-    for i in range(100):
-        #s.sendall(b"Request")
+    i = 0
+    while True:
+        #s.sendall(b"Request")        
         #data = s.recv(1024).decode()
         current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         #data = f"{current_time} {distance_meters:.2f} m"
         distance = measure_distance()  # GerÃ§ek mesafe Ã¶lÃ§Ã¼mÃ¼ yapÄ±lacak
-        distance_meters = distance_calculate(distance)
+        distance_meters = distance_calculate(distance) - yay_yukseklik
         data = distance_meters
         dongu = i
-        print(dongu)
-
-        s.send(str(data).encode())
-
+        print(dongu,distance_meters)
+        
+        previous_distance = distance_meters
+        s.sendall(str(distance_meters).encode())
+            
+        
         # s.send(str(dongu).encode())
         #s.sendall(pickle.dumps(data))
 
         #s.sendall(b"data") #byte
         #s.sendall(data.encode())
-
+        
         if not data:
             break
         data = None
+        i = i + 1
         time.sleep(1)  # 1 saniyede bir mesafe Ã¶lÃ§Ã¼mÃ¼ yap

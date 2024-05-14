@@ -89,6 +89,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                  if data[j] != '':
                      data[j] = '0.'+data[j]
                      data[j] = float(data[j])
+                     
             datam.extend(data)
             # set random seed for reproducibility
             torch.manual_seed(123)
@@ -108,7 +109,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             
             sensor_data = torch.tensor(datam).unsqueeze(1)
 
-            for i in range(len(datam)*10000):
+            for i in range(len(datam)*1000):
                 optimiser.zero_grad()
 
                 # compute each term of the PINN loss function above
