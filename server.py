@@ -1,6 +1,5 @@
 import time
 import socket
-import pytorch_PINN
 import pickle
 import torch
 import torch.nn as nn
@@ -14,15 +13,13 @@ else:
 
 device = torch.device(dev)
 
-# k,m = 20.45, 0.24
-# mu=m
-# x0 = 0.08  # m 0.1
-# v0 = 0  # m/s 0
 
 
+
+
+#Dr. Ben Moseley
 d, w0 = 2, 20
 mu, k = 2*d, w0**2
-
 def exact_solution(d, w0, t):
     "Defines the analytical solution to the under-damped harmonic oscillator problem above."
     assert d < w0
@@ -35,6 +32,18 @@ def exact_solution(d, w0, t):
     return u
 
 
+#Bizim hesap
+'''
+k,m = 20.45, 0.24
+mu=m
+x0 = 0.08  # m 0.1
+v0 = 0  # m/s 0
+
+def exact_solution(t):
+    w=np.sqrt(k/m)
+    u=x0*np.cos(w*t)
+    return u
+'''
 
 class FCN(nn.Module):
     "Defines a standard fully-connected network in PyTorch"
@@ -111,9 +120,21 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
             for i in range(len(datam)*1000):
                 optimiser.zero_grad()
+                '''
+                # compute boundary loss
+                u = pinn(t_boundary)
+                loss1 = (torch.squeeze(u) - x0)**2
+                dudt = torch.autograd.grad(u, t_boundary, torch.ones_like(u), create_graph=True)[0]
+                loss2 = (torch.squeeze(dudt) - v0)**2
 
-                # compute each term of the PINN loss function above
-                # using the following hyperparameters:
+                # compute physics loss
+                u = pinn(t_physics)
+                dudt = torch.autograd.grad(u, t_physics, torch.ones_like(u), create_graph=True)[0]
+                d2udt2 = torch.autograd.grad(dudt, t_physics, torch.ones_like(dudt), create_graph=True)[0]
+                loss3 = torch.mean((mu*d2udt2 + k*u)**2)
+                '''
+
+
                 lambda1, lambda2, lambda3 = 1e-1, 1e-4, 1e-2  # lambda3, sensör verileri için eklenen yeni bir hiperparametre
 
                 u = pinn(t_boundary)
