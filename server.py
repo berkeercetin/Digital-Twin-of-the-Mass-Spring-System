@@ -3,7 +3,7 @@ import socket
 import pytorch_PINN
 import pickle
 
-HOST = "192.168.137.1"  # Standard loopback interface address (localhost)
+HOST = "10.42.0.1"  # Standard loopback interface address (localhost)
 PORT = 12000  # Port to listen on (non-privileged ports are > 1023)
 datam = []
 
@@ -22,16 +22,15 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 if data[i] != '':
                     data[i] = '0.'+data[i]
                     data[i] = float(data[i]) 
-            print(data)
+            datam.extend(data)
+            if received_data == '' or not received_data:
+                pytorch_PINN.main(datam)
+                break
             #datam.extend([float(x) for x in received_data.split("0.") if x != ""])  # "0." ile başlayan her öğeyi ayır            print(datam)
             #time.sleep(10)
 
-            pytorch_PINN.main(data)
             
-            #pytorch_PINN.main(pickle.loads(data))
-            if not data:
-                break
-
+        
             
 
 
