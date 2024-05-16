@@ -135,7 +135,3 @@ def main(sensor_x_data):
 
 
 main([0.01])
-#07.05.2924
-# Egitim zamani egitim datasinda nasil degisecek ?
-
-# yay durmuyor bizim modelimizde.
