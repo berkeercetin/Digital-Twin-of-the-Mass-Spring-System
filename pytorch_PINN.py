@@ -55,60 +55,49 @@ class FCN(nn.Module):
         return x
 
 def main(sensor_x_data):
-    # set random seed for reproducibility
-    print(len(sensor_x_data))
+
     torch.manual_seed(123)
 
-    # define a neural network to train
     pinn = FCN(1,1,32,3)
     a = torch.nn.Parameter(10*torch.ones(1, requires_grad=True))
     b = torch.nn.Parameter(torch.ones(1, requires_grad=True))
 
-    # define boundary points, for the boundary loss
     t_boundary = torch.tensor(0.).view(-1,1).requires_grad_(True)
 
-    # define training points over the entire domain, for the physics loss
-    t_physics = torch.linspace(0,15,60).view(-1,1).requires_grad_(True)
+    t_physics = torch.linspace(0,len(sensor_x_data),len(sensor_x_data)*5).view(-1,1).requires_grad_(True)
 
-    t_test = torch.linspace(0,15,300).view(-1,1)
+
+    t_test = torch.linspace(0,len(sensor_x_data),len(sensor_x_data*10)).view(-1,1)
     u_exact = exact_solution(t_test)
 
-    #optimiser = torch.optim.Adam(pinn.parameters(),lr=1e-3)
     optimiser = torch.optim.Adam(list(pinn.parameters())+[a,b],lr=1e-3)
 
     sensor_data = torch.tensor(sensor_x_data).unsqueeze(1)
 
-    for i in range(50001):
+    for i in range(len(sensor_x_data)*1500):
         optimiser.zero_grad()
 
-        # compute each term of the PINN loss function above
-        # using the following hyperparameters:
-        lambda1, lambda2, lambda3 = 1e-1, 1e-4, 1e-2  # lambda3, sensör verileri için eklenen yeni bir hiperparametre
+        lambda1, lambda2, lambda3 = 1e-1, 1e-4, 1e-2  
 
-        # compute boundary loss
         u = pinn(t_boundary)*torch.sin(a*t_boundary+b)
         loss1 = (torch.squeeze(u) - x0)**2
         dudt = torch.autograd.grad(u, t_boundary, torch.ones_like(u), create_graph=True)[0]
         loss2 = (torch.squeeze(dudt) - v0)**2
 
-        # compute physics loss
         u = pinn(t_physics)*torch.sin(a*t_physics+b)
         dudt = torch.autograd.grad(u, t_physics, torch.ones_like(u), create_graph=True)[0]
         d2udt2 = torch.autograd.grad(dudt, t_physics, torch.ones_like(dudt), create_graph=True)[0]
         loss3 = torch.mean((mu*d2udt2 + k*u)**2)
 
-
-
         # Sensör verileri için kayıp hesaplanmasi
         #sensör verileri için bir kayıp hesaplanıyor ve ardından bu kayıp, modelin sensör verilerini doğru bir şekilde öğrenip öğrenmediğini belirlemek için kullanılıyor.
         # Kayıp hesaplanırken, tahmin edilen sensör verileri (u) ile gerçek sensör verileri (sensor_data) arasındaki ortalama kare hatası hesaplanıyor.
         # Eğer kayıp düşükse, bu, modelin sensör verilerini doğru bir şekilde öğrendiğini gösterebilir.
-        #u = pinn(sensor_data)
-        #loss_sensor = torch.mean((u - sensor_data)**2)  # MSE kullanılarak hesaplama
+        u = pinn(sensor_data)
+        loss_sensor = torch.mean((u - sensor_data)**2)  # MSE kullanılarak hesaplama
 
-        # backpropagate joint loss, take optimiser step
-        #loss = loss1 + lambda1*loss2 + lambda2*loss3 + lambda3*loss_sensor
-        loss = loss1 + lambda1*loss2 + lambda2*loss3
+        loss = loss1 + lambda1*loss2 + lambda2*loss3 + lambda3*loss_sensor
+
         loss.backward()
         optimiser.step()
 
@@ -116,7 +105,7 @@ def main(sensor_x_data):
             print(f"Step {i}, Loss {loss.item()}")
 
                 # plot the result as training progresses
-        if i % 10000 == 0 and i > 0:
+        if i % 5000 == 0 and i > 0 or i == (len(sensor_x_data)*1500)-1:
 
             #print(u.abs().mean().item(), dudt.abs().mean().item(), d2udt2.abs().mean().item())
             u =(pinn(t_test)*torch.sin(a*t_test+b)).detach()
@@ -134,4 +123,4 @@ def main(sensor_x_data):
     return 
 
 
-main([0.01])
+main([0.08,-0.08,0.05,-0.05,0.04,-0.04])

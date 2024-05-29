@@ -1,7 +1,5 @@
-import time
 import socket
 import pytorch_PINN
-import pickle
 
 HOST = "10.42.0.1"  # Standard loopback interface address (localhost)
 PORT = 12000  # Port to listen on (non-privileged ports are > 1023)
@@ -26,13 +24,3 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             if received_data == '' or not received_data:
                 pytorch_PINN.main(datam)
                 break
-            #datam.extend([float(x) for x in received_data.split("0.") if x != ""])  # "0." ile başlayan her öğeyi ayır            print(datam)
-            #time.sleep(10)
-
-            
-        
-            
-
-
-# Veriler geliyor geldikce arka planda dizide depolaniyor. 
-# egitim her dongude o an dizide bulunan veriler ile tekrar yapiliyor.
